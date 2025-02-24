@@ -2,10 +2,8 @@ import birdie
 import birl.{type Time}
 import birl/duration
 import dateformat.{format}
-import gleam/io
 import gleam/list
 import gleam/string
-import gleam/string_builder
 import gleeunit
 import gleeunit/should
 

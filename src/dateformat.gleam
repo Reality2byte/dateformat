@@ -59,10 +59,10 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/option.{Some}
-import gleam/regex.{type Match}
+import gleam/regexp.{type Match}
 import gleam/result
 import gleam/string
-import gleam/string_builder
+import gleam/string_tree
 
 @internal
 pub fn main() {
@@ -115,11 +115,11 @@ pub fn format(fmt: String, time: Time) -> Result(String, Nil) {
 ///
 pub fn compile_format(fmt: String) -> Result(fn(Time) -> String, Nil) {
   let assert Ok(regex) =
-    regex.from_string(
+    regexp.from_string(
       "\\[([^\\]]*)\\]|(?:Mo|M{1,4}|DDDo|Do|D{1,4}|do|d{1,4}|E|wo|w{1,2}|Wo|W{1,2}|Qo|Q|YYYY|YY|HH|H|hh|h|mm|m|ss|s|SSS|SS|S|X|x|z|Z|.)",
     )
   use fmts <- result.try(
-    regex.scan(regex, fmt)
+    regexp.scan(regex, fmt)
     |> list.try_map(parse_match),
   )
 
@@ -127,10 +127,10 @@ pub fn compile_format(fmt: String) -> Result(fn(Time) -> String, Nil) {
 }
 
 fn run_format(fmts: List(fn(Time) -> String), time: Time) -> String {
-  list.fold(fmts, string_builder.new(), fn(acc, fmt) {
-    string_builder.append(acc, fmt(time))
+  list.fold(fmts, string_tree.new(), fn(acc, fmt) {
+    string_tree.append(acc, fmt(time))
   })
-  |> string_builder.to_string
+  |> string_tree.to_string
 }
 
 fn parse_match(match: Match) -> Result(fn(Time) -> String, Nil) {
@@ -159,19 +159,19 @@ fn parse_match(match: Match) -> Result(fn(Time) -> String, Nil) {
         t
         |> time.to_hour_of_day
         |> int.to_string
-        |> string.pad_left(2, "0")
+        |> string.pad_start(2, "0")
       })
     "H" -> Ok(fn(t) { t |> time.to_hour_of_day |> int.to_string })
     "hh" ->
       Ok(fn(t) {
-        t |> time.to_hour_of_period |> int.to_string |> string.pad_left(2, "0")
+        t |> time.to_hour_of_period |> int.to_string |> string.pad_start(2, "0")
       })
     "h" -> Ok(fn(t) { t |> time.to_hour_of_period |> int.to_string })
 
     // Minute of Hour
     "mm" ->
       Ok(fn(t) {
-        t |> time.to_minute_of_hour |> int.to_string |> string.pad_left(2, "0")
+        t |> time.to_minute_of_hour |> int.to_string |> string.pad_start(2, "0")
       })
     "m" -> Ok(fn(t) { t |> time.to_minute_of_hour |> int.to_string })
 
@@ -181,20 +181,23 @@ fn parse_match(match: Match) -> Result(fn(Time) -> String, Nil) {
         t
         |> time.to_second_of_minute
         |> int.to_string
-        |> string.pad_left(2, "0")
+        |> string.pad_start(2, "0")
       })
     "s" -> Ok(fn(t) { t |> time.to_second_of_minute |> int.to_string })
 
     // Fraction of Second
     "SSS" ->
       Ok(fn(t) {
-        t |> time.to_milli_of_second |> int.to_string |> string.pad_left(3, "0")
+        t
+        |> time.to_milli_of_second
+        |> int.to_string
+        |> string.pad_start(3, "0")
       })
     "SS" ->
       Ok(fn(t) {
         { t |> time.to_milli_of_second } / 10
         |> int.to_string
-        |> string.pad_left(2, "0")
+        |> string.pad_start(2, "0")
       })
     "S" ->
       Ok(fn(t) {
@@ -221,7 +224,10 @@ fn parse_match(match: Match) -> Result(fn(Time) -> String, Nil) {
     "W" -> Ok(fn(t) { t |> day.to_iso_week_of_year |> int.to_string })
     "WW" ->
       Ok(fn(t) {
-        t |> day.to_iso_week_of_year |> int.to_string |> string.pad_left(2, "0")
+        t
+        |> day.to_iso_week_of_year
+        |> int.to_string
+        |> string.pad_start(2, "0")
       })
     "Wo" -> Ok(fn(t) { t |> day.to_iso_week_of_year |> util.to_ordinal })
 
@@ -234,12 +240,12 @@ fn parse_match(match: Match) -> Result(fn(Time) -> String, Nil) {
     "dddd" -> Ok(fn(t) { t |> day.to_weekday_string })
     "D" -> Ok(fn(t) { t |> date |> int.to_string })
     "Do" -> Ok(fn(t) { t |> date |> util.to_ordinal })
-    "DD" -> Ok(fn(t) { t |> date |> int.to_string |> string.pad_left(2, "0") })
+    "DD" -> Ok(fn(t) { t |> date |> int.to_string |> string.pad_start(2, "0") })
     "DDD" -> Ok(fn(t) { t |> day.to_day_of_year |> int.to_string })
     "DDDo" -> Ok(fn(t) { t |> day.to_day_of_year |> util.to_ordinal })
     "DDDD" ->
       Ok(fn(t) {
-        t |> day.to_day_of_year |> int.to_string |> string.pad_left(2, "0")
+        t |> day.to_day_of_year |> int.to_string |> string.pad_start(2, "0")
       })
 
     // Month
@@ -250,7 +256,7 @@ fn parse_match(match: Match) -> Result(fn(Time) -> String, Nil) {
         |> birl.month
         |> month.to_month_num
         |> int.to_string
-        |> string.pad_left(2, "0")
+        |> string.pad_start(2, "0")
       })
     "MMM" ->
       Ok(fn(t) {
