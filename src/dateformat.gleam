@@ -46,57 +46,21 @@
 ////
 //// Other characters are just output as is
 //// Characters contained with [...] will be output without formats
-//// 
+////
 
 import birl.{type Time}
-import birl/duration
 
 import dateformat/internal/day
 import dateformat/internal/month
 import dateformat/internal/time
 import dateformat/internal/util
 import gleam/int
-import gleam/io
 import gleam/list
 import gleam/option.{Some}
 import gleam/regexp.{type Match}
 import gleam/result
 import gleam/string
 import gleam/string_tree
-
-@internal
-pub fn main() {
-  io.println("Hello from dateformat!")
-  // echo format(
-  //   //"YYYY YY Q Qo W Wo WW E Do-Mo-yyyy [dd-MM-yyyy] DDDo",
-  //   "A a H HH h hh k kk m mm s ss S SS SSS z zz Z ZZ X x",
-  //   birl.now(),
-  // )
-  list.range(-12, 12)
-  |> list.each(fn(i) {
-    let dt = birl.add(birl.now(), duration.hours(i))
-
-    echo birl.to_iso8601(dt)
-      <> " "
-      <> format(
-        //"YYYY YY Q Qo W Wo WW E Do-Mo-yyyy [dd-MM-yyyy] DDDo",
-        "A a H HH h hh k kk m mm s ss S SS SSS Z ZZ zz X x",
-        dt,
-      )
-      |> result.unwrap("")
-  })
-  birl.parse("20120214T15:30:17.123+00:00")
-  |> result.unwrap(birl.now())
-  |> birl.get_offset
-  |> echo
-  birl.from_unix_milli(1_234_567_890_123)
-  |> birl.to_iso8601
-  |> echo
-
-  let t = birl.from_unix_milli(1_234_567_890_123)
-
-  format("DD-MMM-YYYY HH:mm", t) |> echo
-}
 
 /// Formats the given Time using the specified format
 /// Can return error if the format doesn't parse successfully
